@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Global FX Telemetry & AI Forecasting Engine</title>
-    <!-- Chart.js for time-series visualization -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>FX Telemetry & AI Forecasting Engine</title>
     <style>
         :root {
             --bg-color: #0b0f19;
@@ -63,7 +61,6 @@
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
             gap: 20px;
             margin-bottom: 25px;
-            width: 100%;
         }
 
         .card {
@@ -98,14 +95,20 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 20px;
-            width: 100%;
-            height: 400px;
-            position: relative;
         }
 
-        canvas {
-            width: 100% !important;
-            height: 100% !important;
+        .chart-title {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        svg {
+            width: 100%;
+            height: 220px;
+            overflow: visible;
         }
     </style>
 </head>
@@ -113,122 +116,49 @@
 
     <header>
         <h1>FX TELEMETRY // TIME-SERIES & AI PREDICTION ENGINE</h1>
-        <div class="status-badge" id="apiStatus">Pipeline Status: Online (High-Speed Engine)</div>
+        <div class="status-badge">Pipeline Status: Online (Standalone Engine)</div>
     </header>
 
     <div class="grid-container" id="metricsGrid">
-        <!-- Injected dynamically -->
+        <div class="card">
+            <div class="card-title">USD / EUR (Latest Spot)</div>
+            <div class="card-value" id="valEur">€0.9234</div>
+            <div class="card-sub">30-Day Time-Series Tracked</div>
+        </div>
+        <div class="card">
+            <div class="card-title">AI Trend Projection (EUR)</div>
+            <div class="card-value" id="valAi" style="color: var(--accent-purple);">€0.9265</div>
+            <div class="card-sub" id="valVar">Projected Variance: +0.34%</div>
+        </div>
+        <div class="card">
+            <div class="card-title">USD / GBP (Latest Spot)</div>
+            <div class="card-value" id="valGbp">£0.7845</div>
+            <div class="card-sub">Institutional Feed Tracked</div>
+        </div>
+        <div class="card">
+            <div class="card-title">USD / JPY (Latest Spot)</div>
+            <div class="card-value" id="valJpy">¥153.20</div>
+            <div class="card-sub">Institutional Feed Tracked</div>
+        </div>
     </div>
 
     <div class="chart-section">
-        <canvas id="timeSeriesChart"></canvas>
+        <div class="chart-title">30-Day USD/EUR Historical Trend & Momentum Analysis</div>
+        <svg id="trendSvg" viewBox="0 0 800 200" preserveAspectRatio="none">
+            <!-- Dynamically rendered SVG Polyline -->
+            <polyline id="trendLine" fill="none" stroke="#3b82f6" stroke-width="3" points="" />
+        </svg>
     </div>
 
     <script>
-        function loadTelemetryData() {
-            const rates = {};
-            const dates = [];
+        function initEngine() {
+            // Generate deterministic 30-day institutional time-series data
+            const eurRates = [];
             const eurBase = 0.9234;
-            const gbpBase = 0.7845;
-            const jpyBase = 153.20;
 
             for (let i = 30; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                const dateStr = d.toISOString().split('T')[0];
-                dates.push(dateStr);
-
-                rates[dateStr] = {
-                    EUR: Number((eurBase + Math.sin(i / 3) * 0.007).toFixed(4)),
-                    GBP: Number((gbpBase + Math.cos(i / 3) * 0.005).toFixed(4)),
-                    JPY: Number((jpyBase + Math.sin(i / 2) * 1.15).toFixed(2))
-                };
-            }
-            return { rates, dates };
-        }
-
-        function initEngine() {
-            const { rates, dates } = loadTelemetryData();
-            
-            const eurRates = dates.map(d => rates[d].EUR);
-            const gbpRates = dates.map(d => rates[d].GBP);
-            const jpyRates = dates.map(d => rates[d].JPY);
-
-            function predictNextValue(arr) {
-                const windowSize = 5;
-                const slice = arr.slice(-windowSize);
-                const avg = slice.reduce((a, b) => a + b, 0) / slice.length;
-                const momentum = slice[slice.length - 1] - slice[0];
-                return Number((avg + (momentum * 0.1)).toFixed(4));
+                const val = Number((eurBase + Math.sin(i / 3) * 0.007).toFixed(4));
+                eurRates.push(val);
             }
 
-            const predictedEur = predictNextValue(eurRates);
-            const currentEur = eurRates[eurRates.length - 1];
-            const variance = (((predictedEur - currentEur) / currentEur) * 100).toFixed(2);
-
-            // Populate Metric Cards UI
-            const grid = document.getElementById('metricsGrid');
-            grid.innerHTML = `
-                <div class="card">
-                    <div class="card-title">USD / EUR (Latest Spot)</div>
-                    <div class="card-value">€${currentEur}</div>
-                    <div class="card-sub">30-Day Time-Series Tracked</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">AI Trend Projection (EUR)</div>
-                    <div class="card-value" style="color: var(--accent-purple);">€${predictedEur}</div>
-                    <div class="card-sub">Projected Variance: ${variance}%</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">USD / GBP (Latest Spot)</div>
-                    <div class="card-value">£${gbpRates[gbpRates.length - 1]}</div>
-                    <div class="card-sub">Institutional Feed Tracked</div>
-                </div>
-                <div class="card">
-                    <div class="card-title">USD / JPY (Latest Spot)</div>
-                    <div class="card-value">¥${jpyRates[jpyRates.length - 1]}</div>
-                    <div class="card-sub">Institutional Feed Tracked</div>
-                </div>
-            `;
-
-            // Render Chart.js Time-Series Graph
-            const ctx = document.getElementById('timeSeriesChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: dates,
-                    datasets: [
-                        {
-                            label: 'USD/EUR Historical Trend',
-                            data: eurRates,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            fill: true,
-                            tension: 0.2
-                        },
-                        {
-                            label: 'USD/GBP Historical Trend',
-                            data: gbpRates,
-                            borderColor: '#10b981',
-                            fill: false,
-                            tension: 0.2
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
-                        y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } }
-                    },
-                    plugins: {
-                        legend: { labels: { color: '#f8fafc' } }
-                    }
-                }
-            });
-        }
-
-        // Execute immediately
-        if (document.readyState === 'loading') {
-            document.addEventListener
+            const currentEur = eurRates
