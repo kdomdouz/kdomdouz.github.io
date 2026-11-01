@@ -105,9 +105,14 @@
             letter-spacing: 0.5px;
         }
 
+        .svg-container {
+            width: 100%;
+            height: 250px;
+        }
+
         svg {
             width: 100%;
-            height: 220px;
+            height: 100%;
             overflow: visible;
         }
     </style>
@@ -144,15 +149,21 @@
 
     <div class="chart-section">
         <div class="chart-title">30-Day USD/EUR Historical Trend & Momentum Analysis</div>
-        <svg id="trendSvg" viewBox="0 0 800 200" preserveAspectRatio="none">
-            <!-- Dynamically rendered SVG Polyline -->
-            <polyline id="trendLine" fill="none" stroke="#3b82f6" stroke-width="3" points="" />
-        </svg>
+        <div class="svg-container">
+            <svg viewBox="0 0 800 200" preserveAspectRatio="none">
+                <!-- Background Grid Lines -->
+                <line x1="0" y1="50" x2="800" y2="50" stroke="#1e293b" stroke-dasharray="4" />
+                <line x1="0" y1="100" x2="800" y2="100" stroke="#1e293b" stroke-dasharray="4" />
+                <line x1="0" y1="150" x2="800" y2="150" stroke="#1e293b" stroke-dasharray="4" />
+                
+                <!-- Trend Polyline -->
+                <polyline id="trendLine" fill="none" stroke="#3b82f6" stroke-width="3" points="" />
+            </svg>
+        </div>
     </div>
 
     <script>
         function initEngine() {
-            // Generate deterministic 30-day institutional time-series data
             const eurRates = [];
             const eurBase = 0.9234;
 
@@ -161,4 +172,36 @@
                 eurRates.push(val);
             }
 
-            const currentEur = eurRates
+            const currentEur = eurRates[eurRates.length - 1];
+            
+            // AI Moving Average Prediction Heuristic
+            const windowSize = 5;
+            const slice = eurRates.slice(-windowSize);
+            const avg = slice.reduce((a, b) => a + b, 0) / slice.length;
+            const momentum = slice[slice.length - 1] - slice[0];
+            const predictedEur = Number((avg + (momentum * 0.1)).toFixed(4));
+            const variance = (((predictedEur - currentEur) / currentEur) * 100).toFixed(2);
+
+            // Update UI
+            document.getElementById('valEur').innerText = `€${currentEur}`;
+            document.getElementById('valAi').innerText = `€${predictedEur}`;
+            document.getElementById('valVar').innerText = `Projected Variance: ${variance}%`;
+
+            // Render SVG Trend Line Points
+            const minVal = Math.min(...eurRates);
+            const maxVal = Math.max(...eurRates);
+            const range = maxVal - minVal || 1;
+
+            const points = eurRates.map((val, idx) => {
+                const x = (idx / (eurRates.length - 1)) * 800;
+                const y = 180 - ((val - minVal) / range) * 150;
+                return `${x},${y}`;
+            }).join(' ');
+
+            document.getElementById('trendLine').setAttribute('points', points);
+        }
+
+        initEngine();
+    </script>
+</body>
+</html>
