@@ -110,22 +110,25 @@
         let financialChart = null;
 
         async function fetchFinancialData() {
+            const statusBadge = document.getElementById('apiStatus');
             try {
-                // Fetch real official reference rates from the European Central Bank / global banks API (Base USD)
+                // Fetch official reference rates from the European Central Bank / global banks API
                 const response = await fetch('https://api.frankfurter.dev/v1/latest?base=USD');
-                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-                document.getElementById('apiStatus').innerText = `Source: Official ECB Feed (${data.date})`;
+                const data = await response.json();
+                statusBadge.innerText = `Source: Official ECB Feed (${data.date})`;
 
                 const rates = data.rates;
-                
-                // Select key major global fiat currencies
                 const eur = rates.EUR;
                 const gbp = rates.GBP;
                 const jpy = rates.JPY;
                 const chf = rates.CHF;
 
-                // Render financial cards with real market data
+                // Render financial metric cards
                 const grid = document.getElementById('metricsGrid');
                 grid.innerHTML = `
                     <div class="card">
@@ -146,7 +149,7 @@
                     </div>
                 `;
 
-                // Build or update the analytical bar chart with real exchange data
+                // Build or update the analytical bar chart
                 const ctx = document.getElementById('financialChart').getContext('2d');
                 
                 if (!financialChart) {
@@ -166,3 +169,27 @@
                             maintainAspectRatio: false,
                             scales: {
                                 x: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } },
+                                y: { ticks: { color: '#94a3b8' }, grid: { color: '#1e293b' } }
+                            },
+                            plugins: {
+                                legend: { labels: { color: '#f8fafc' } }
+                            }
+                        }
+                    });
+                } else {
+                    financialChart.data.datasets[0].data = [eur, gbp, jpy, chf];
+                    financialChart.update();
+                }
+
+            } catch (error) {
+                console.error("Failed to retrieve financial telemetry:", error);
+                statusBadge.innerText = 'Status: Data Connection Failed';
+                statusBadge.style.color = '#ef4444';
+            }
+        }
+
+        // Execute data retrieval on page load
+        fetchFinancialData();
+    </script>
+</body>
+</html>
