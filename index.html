@@ -41,7 +41,7 @@
         }
 
         header h1 {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             color: var(--accent-blue);
             letter-spacing: 1px;
         }
@@ -102,41 +102,12 @@
 
     <header>
         <h1>FX TELEMETRY // TIME-SERIES & AI PREDICTION ENGINE</h1>
-        <div class="status-badge" id="apiStatus">Syncing Historical Bank Feeds...</div>
+        <div class="status-badge" id="apiStatus">Initializing Pipeline...</div>
     </header>
 
     <div class="grid-container" id="metricsGrid">
-        <!-- Injected via telemetry script -->
+        <!-- Rendered via script -->
     </div>
 
     <div class="chart-section">
-        <canvas id="timeSeriesChart"></canvas>
-    </div>
-
-    <script>
-        let timeSeriesChart = null;
-
-        // Helper to calculate date strings for historical range (Last 30 days)
-        function getDateRange() {
-            const end = new Date();
-            const start = new Date();
-            start.setDate(end.getDate() - 30);
-            return {
-                start: start.toISOString().split('T')[0],
-                end: end.toISOString().split('T')[0]
-            };
-        }
-
-        async function initTelemetryEngine() {
-            const statusBadge = document.getElementById('apiStatus');
-            try {
-                const { start, end } = getDateRange();
-                
-                // Fetch historical time-series data from central bank repository (Base: USD, Target: EUR)
-                const response = `https://api.frankfurter.dev/v1/${start}..${end}?base=USD&symbols=EUR,GBP,JPY`;
-                const res = await fetch(response);
-                
-                if (!res.ok) throw new Error("Network response failed");
-                const data = await res.json();
-
-                status
+        <canvas
